@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Order, OrderStatus, Client, Product, OrderItem } from '../types';
-import { INITIAL_ORDERS, INITIAL_CLIENTS, INITIAL_PRODUCTS } from '../constants';
+import { Order, OrderStatus, OrderItem } from '../types';
+import { INITIAL_ORDERS } from '../constants';
 import { canChangeStatus } from '../utils/permissions';
+import {
+  hasUnweighedKGProducts as hasUnweighedKGProductsRule,
+  calculateEstimatedTotal as calculateEstimatedTotalRule,
+  calculateActualTotalFromRules,
+} from '../config/businessRules';
 
 interface OrdersContextType {
   orders: Order[];
-  clients: Client[];
-  products: Product[];
   addOrder: (order: Omit<Order, 'id'>, userId: string, userName: string, userRole: string) => void;
   updateOrder: (id: string, order: Partial<Order>, userId: string, userName: string, userRole: string) => void;
   deleteOrder: (id: string, userId: string, userName: string, userRole: string, onAuditLog: (entry: { user: string; role: string; action: string; reference: string; details: string }) => void) => void;
@@ -20,8 +23,6 @@ const OrdersContext = createContext<OrdersContextType | undefined>(undefined);
 
 export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [clients] = useState<Client[]>(INITIAL_CLIENTS);
-  const [products] = useState<Product[]>(INITIAL_PRODUCTS);
 
   const generateOrderId = (): string => {
     const lastOrder = orders[orders.length - 1];
@@ -32,40 +33,14 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return '#ORD-001';
   };
 
-  // Calcula el total estimado: solo incluye productos por Unidad
-  // Productos por KG sin peso = $0 en el total estimado
-  const calculateEstimatedTotal = (orderItems: OrderItem[]): number => {
-    return orderItems.reduce((total, item) => {
-      // Solo sumar productos por Unidad
-      if (item.unit === 'KG') {
-        return total; // Productos KG sin peso = $0
-      }
-      // Para productos por Unidad, usar estimatedQuantity
-      return total + (item.price * item.estimatedQuantity);
-    }, 0);
-  };
+  const calculateEstimatedTotal = (orderItems: OrderItem[]): number =>
+    calculateEstimatedTotalRule(orderItems);
 
-  // Calcula el total real: incluye productos Unidad + productos KG con peso real
-  const calculateActualTotal = (orderItems: OrderItem[]): number => {
-    return orderItems.reduce((total, item) => {
-      if (item.unit === 'KG') {
-        // Para productos por KG, solo sumar si tienen actualWeight
-        if (item.actualWeight !== undefined && item.actualWeight !== null && item.actualWeight > 0) {
-          return total + (item.price * item.actualWeight);
-        }
-        return total; // Sin peso real = $0
-      } else {
-        // Para productos por Unidad, usar estimatedQuantity
-        return total + (item.price * item.estimatedQuantity);
-      }
-    }, 0);
-  };
+  const calculateActualTotal = (orderItems: OrderItem[]): number =>
+    calculateActualTotalFromRules(orderItems);
 
-  const hasUnweighedKGProducts = (order: Order): boolean => {
-    return order.orderItems.some(item => 
-      item.unit === 'KG' && (item.actualWeight === undefined || item.actualWeight === 0)
-    );
-  };
+  const hasUnweighedKGProducts = (order: Order): boolean =>
+    hasUnweighedKGProductsRule(order);
 
   const addOrder = (orderData: Omit<Order, 'id'>, userId: string, userName: string, userRole: string) => {
     // Calcular estimatedTotal: solo productos por Unidad
@@ -204,8 +179,6 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   return (
     <OrdersContext.Provider value={{ 
       orders, 
-      clients, 
-      products, 
       addOrder, 
       updateOrder, 
       deleteOrder, 

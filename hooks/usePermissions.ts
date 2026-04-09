@@ -7,6 +7,9 @@ import {
   canChangeStatus,
   canChangeOrderStatus,
   getAvailableStatusTransitions,
+  canToggleLogisticsCheck,
+  canToggleFacturacionCheck,
+  canToggleAdminCheck,
 } from '../utils/permissions';
 
 export const usePermissions = () => {
@@ -20,6 +23,9 @@ export const usePermissions = () => {
       canChangeStatus: () => false,
       canChangeOrderStatus: () => false,
       getAvailableStatusTransitions: () => [],
+      canToggleLogisticsCheck: () => false,
+      canToggleFacturacionCheck: () => false,
+      canToggleAdminCheck: () => false,
     };
   }
 
@@ -33,5 +39,8 @@ export const usePermissions = () => {
       canChangeOrderStatus(user.role, status),
     getAvailableStatusTransitions: (status: OrderStatus) =>
       getAvailableStatusTransitions(user.role, status),
+    canToggleLogisticsCheck: () => canToggleLogisticsCheck(user.role),
+    canToggleFacturacionCheck: () => canToggleFacturacionCheck(user.role),
+    canToggleAdminCheck: () => canToggleAdminCheck(user.role),
   };
 };

@@ -4,7 +4,11 @@ import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { OrdersProvider } from './contexts/OrdersContext';
 import { AuditProvider } from './contexts/AuditContext';
+import { ProductsProvider } from './contexts/ProductsContext';
+import { ClientsProvider } from './contexts/ClientsContext';
+import { UsersProvider } from './contexts/UsersContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ViewGuard from './components/ViewGuard';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Login from './views/Login';
@@ -12,6 +16,7 @@ import Dashboard from './views/Dashboard';
 import Products from './views/Products';
 import Clients from './views/Clients';
 import Orders from './views/Orders';
+import OrderDetail from './views/OrderDetail';
 import Users from './views/Users';
 import Audit from './views/Audit';
 
@@ -19,6 +24,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   
   const getTitle = () => {
+    if (location.pathname.startsWith('/pedidos/')) {
+      return 'Detalle del Pedido';
+    }
     switch(location.pathname) {
       case '/': return 'Panel General';
       case '/productos': return 'Gestión de Productos';
@@ -47,30 +55,39 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <AuditProvider>
-        <OrdersProvider>
-          <HashRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/productos" element={<Products />} />
-                        <Route path="/clientes" element={<Clients />} />
-                        <Route path="/pedidos" element={<Orders />} />
-                        <Route path="/usuarios" element={<Users />} />
-                        <Route path="/auditoria" element={<Audit />} />
-                      </Routes>
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </HashRouter>
-        </OrdersProvider>
+        <ProductsProvider>
+          <ClientsProvider>
+            <UsersProvider>
+              <OrdersProvider>
+                <HashRouter>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                      path="/*"
+                      element={
+                        <ProtectedRoute>
+                          <ViewGuard>
+                            <Layout>
+                              <Routes>
+                              <Route path="/" element={<Dashboard />} />
+                              <Route path="/productos" element={<Products />} />
+                              <Route path="/clientes" element={<Clients />} />
+                              <Route path="/pedidos" element={<Orders />} />
+                              <Route path="/pedidos/:id" element={<OrderDetail />} />
+                              <Route path="/usuarios" element={<Users />} />
+                              <Route path="/auditoria" element={<Audit />} />
+                              </Routes>
+                            </Layout>
+                          </ViewGuard>
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </HashRouter>
+              </OrdersProvider>
+            </UsersProvider>
+          </ClientsProvider>
+        </ProductsProvider>
       </AuditProvider>
     </AuthProvider>
   );

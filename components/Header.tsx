@@ -1,7 +1,8 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useOrders } from '../contexts/OrdersContext';
+import { useClients } from '../contexts/ClientsContext';
 
 interface HeaderProps {
   title: string;
@@ -10,22 +11,70 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ title }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { orders } = useOrders();
+  const { clients } = useClients();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showResults, setShowResults] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setShowResults(value.trim().length > 0);
+  };
+
+  // Buscar en pedidos y clientes
+  const searchResults = React.useMemo(() => {
+    if (!searchTerm.trim()) return { orders: [], clients: [] };
+    
+    const term = searchTerm.toLowerCase();
+    const matchingOrders = orders
+      .filter(order => 
+        order.id.toLowerCase().includes(term) || 
+        order.client.toLowerCase().includes(term)
+      )
+      .slice(0, 5);
+    
+    const matchingClients = clients
+      .filter(client => 
+        client.id.toLowerCase().includes(term) || 
+        client.name.toLowerCase().includes(term)
+      )
+      .slice(0, 5);
+    
+    return { orders: matchingOrders, clients: matchingClients };
+  }, [searchTerm, orders, clients]);
+
+  const handleResultClick = (type: 'order' | 'client', id: string) => {
+    if (type === 'order') {
+      const orderId = id.replace('#', '');
+      navigate(`/pedidos/${orderId}`);
+    } else {
+      navigate('/clientes');
+    }
+    setSearchTerm('');
+    setShowResults(false);
+  };
+
   return (
     <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a2634] px-8 py-4 sticky top-0 z-10 transition-colors">
-      <div className="flex items-center gap-4">
-        <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">
+      <div className="flex items-center gap-3 min-w-0">
+        <img
+          src="/logo_color_solo_png.png"
+          alt="Logo de Cladera Distribuidora"
+          className="md:hidden max-h-10 max-w-[140px] w-auto h-auto object-contain flex-shrink-0"
+        />
+        <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight truncate">
           {title}
         </h2>
       </div>
       
       <div className="flex items-center gap-6">
-        <label className="hidden md:flex flex-col min-w-64 h-10">
+        <div className="hidden md:flex flex-col min-w-64 h-10 relative">
           <div className="flex w-full flex-1 items-stretch rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
             <div className="text-slate-400 flex items-center justify-center pl-3">
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>search</span>
@@ -33,9 +82,47 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <input 
               className="flex w-full min-w-0 flex-1 bg-transparent border-none text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-0 text-sm px-3" 
               placeholder="Buscar pedidos, clientes..." 
+              value={searchTerm}
+              onChange={handleSearch}
+              onFocus={() => searchTerm.trim() && setShowResults(true)}
+              onBlur={() => setTimeout(() => setShowResults(false), 200)}
             />
           </div>
-        </label>
+          {showResults && (searchResults.orders.length > 0 || searchResults.clients.length > 0) && (
+            <div className="absolute top-full mt-2 w-full bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+              {searchResults.orders.length > 0 && (
+                <div className="p-2">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase px-2 py-1">Pedidos</div>
+                  {searchResults.orders.map(order => (
+                    <button
+                      key={order.id}
+                      onClick={() => handleResultClick('order', order.id)}
+                      className="w-full text-left px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">{order.id}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{order.client}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {searchResults.clients.length > 0 && (
+                <div className="p-2 border-t border-slate-200 dark:border-slate-700">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase px-2 py-1">Clientes</div>
+                  {searchResults.clients.map(client => (
+                    <button
+                      key={client.id}
+                      onClick={() => handleResultClick('client', client.id)}
+                      className="w-full text-left px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">{client.name}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{client.id}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         
         <div className="flex items-center gap-3 border-l border-slate-200 dark:border-slate-700 pl-6">
           <button className="flex items-center justify-center rounded-lg size-10 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors relative">

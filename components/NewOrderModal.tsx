@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useOrders } from '../contexts/OrdersContext';
+import { useClients } from '../contexts/ClientsContext';
+import { useProducts } from '../contexts/ProductsContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAudit } from '../contexts/AuditContext';
-import { OrderStatus, OrderItem } from '../types';
+import { OrderStatus, OrderItem, Product } from '../types';
 
 interface NewOrderModalProps {
   isOpen: boolean;
@@ -10,7 +12,9 @@ interface NewOrderModalProps {
 }
 
 const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
-  const { clients, products, addOrder, orders } = useOrders();
+  const { addOrder, orders } = useOrders();
+  const { clients } = useClients();
+  const { products } = useProducts();
   const { user } = useAuth();
   const { addAuditEntry } = useAudit();
   const [selectedClient, setSelectedClient] = useState('');
@@ -18,6 +22,8 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
   const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [searchQueryByItem, setSearchQueryByItem] = useState<Record<number, string>>({});
+  const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -27,8 +33,25 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
       setOrderDate(new Date().toISOString().split('T')[0]);
       setOrderItems([]);
       setErrors({});
+      setSearchQueryByItem({});
+      setOpenDropdownIndex(null);
     }
   }, [isOpen]);
+
+  const getFilteredProducts = (query: string): Product[] => {
+    const term = query.trim().toLowerCase();
+    if (!term) return products;
+    return products.filter(
+      (p) =>
+        p.id.toLowerCase().includes(term) ||
+        p.name.toLowerCase().includes(term) ||
+        p.brand.toLowerCase().includes(term) ||
+        p.category.toLowerCase().includes(term)
+    );
+  };
+
+  const getProductLabel = (p: Product) =>
+    `${p.name} (${p.brand}) - $${p.price.toFixed(2)} / ${p.unit}`;
 
   const handleAddProduct = () => {
     setOrderItems([...orderItems, { productId: '', estimatedQuantity: 1, price: 0, unit: 'Unidad' }]);
@@ -105,9 +128,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
       }
       const product = products.find(p => p.id === item.productId);
       if (item.estimatedQuantity <= 0) {
-        newErrors[`quantity_${index}`] = product && product.unit === 'KG' 
-          ? 'Debes ingresar la cantidad de unidades (ej: 3 quesos)'
-          : 'La cantidad debe ser mayor a 0';
+        newErrors[`quantity_${index}`] = 'La cantidad debe ser mayor a 0';
       }
     });
     
@@ -263,21 +284,76 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
                   const product = products.find(p => p.id === item.productId);
                   return (
                     <div key={index} className="flex gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <div className="flex-1">
-                        <select
-                          value={item.productId}
-                          onChange={(e) => handleProductChange(index, 'productId', e.target.value)}
-                          className={`w-full px-3 py-2 bg-white dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-slate-900 dark:text-white ${
+                      <div className="flex-1 relative">
+                        <div
+                          className={`flex w-full items-center rounded-lg border bg-white dark:bg-slate-800 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary text-sm text-slate-900 dark:text-white ${
                             errors[`product_${index}`] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                           }`}
                         >
-                          <option value="">Seleccionar producto...</option>
-                          {products.map((product) => (
-                            <option key={product.id} value={product.id}>
-                              {product.emoji} {product.name} - ${product.price.toFixed(2)} / {product.unit}
-                            </option>
-                          ))}
-                        </select>
+                          <span className="pl-3 text-slate-400 material-symbols-outlined text-[20px]">search</span>
+                          <input
+                            type="text"
+                            value={
+                              searchQueryByItem[index] !== undefined && searchQueryByItem[index] !== ''
+                                ? searchQueryByItem[index]
+                                : item.productId && product
+                                  ? getProductLabel(product)
+                                  : ''
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value.trim() && item.productId) {
+                                handleProductChange(index, 'productId', '');
+                              }
+                              setSearchQueryByItem((prev) => ({ ...prev, [index]: value }));
+                            }}
+                            onFocus={() => setOpenDropdownIndex(index)}
+                            onBlur={() => setTimeout(() => setOpenDropdownIndex(null), 200)}
+                            placeholder="Buscar por ID, nombre, marca o categoría..."
+                            className="w-full min-w-0 py-2 pr-3 pl-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm"
+                          />
+                        </div>
+                        {openDropdownIndex === index && (
+                          <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                            {(() => {
+                              const query = searchQueryByItem[index] ?? '';
+                              const filtered = getFilteredProducts(query);
+                              if (filtered.length === 0) {
+                                return (
+                                  <div className="px-3 py-4 text-sm text-slate-500 dark:text-slate-400 text-center">
+                                    {query.trim()
+                                      ? 'Ningún producto coincide con la búsqueda'
+                                      : 'Escribí para buscar productos'}
+                                  </div>
+                                );
+                              }
+                              return (
+                                <ul className="py-1">
+                                  {filtered.map((p) => (
+                                    <li key={p.id}>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          handleProductChange(index, 'productId', p.id);
+                                          setSearchQueryByItem((prev) => {
+                                            const next = { ...prev };
+                                            delete next[index];
+                                            return next;
+                                          });
+                                          setOpenDropdownIndex(null);
+                                          setErrors((prev) => ({ ...prev, [`product_${index}`]: '' }));
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                      >
+                                        {getProductLabel(p)}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            })()}
+                          </div>
+                        )}
                         {errors[`product_${index}`] && (
                           <p className="text-xs text-red-500 mt-1">{errors[`product_${index}`]}</p>
                         )}
@@ -285,24 +361,29 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
                       
                       <div className="w-32">
                         <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">
-                          {product && product.unit === 'KG' ? 'Cantidad (unidades)' : 'Cantidad'}
+                          Cantidad
                         </label>
                         <input
                           type="number"
-                          min="1"
-                          step="1"
-                          value={item.estimatedQuantity || ''}
-                          onChange={(e) => handleProductChange(index, 'estimatedQuantity', parseInt(e.target.value) || 0)}
+                          min={product && product.unit === 'KG' ? 0.1 : 1}
+                          step={product && product.unit === 'KG' ? 0.1 : 1}
+                          value={item.estimatedQuantity ?? ''}
+                          onChange={(e) => {
+                            const product = products.find(p => p.id === orderItems[index].productId);
+                            const raw = e.target.value;
+                            const num = product?.unit === 'KG' ? (parseFloat(raw) || 0) : (parseInt(raw, 10) || 0);
+                            handleProductChange(index, 'estimatedQuantity', num);
+                          }}
                           className={`w-full px-3 py-2 bg-white dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-slate-900 dark:text-white ${
                             errors[`quantity_${index}`] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                           }`}
-                          placeholder={product && product.unit === 'KG' ? 'Ej: 3' : ''}
+                          placeholder={product && product.unit === 'KG' ? 'Ej: 1,5' : ''}
                         />
                         {errors[`quantity_${index}`] && (
                           <p className="text-xs text-red-500 mt-1">{errors[`quantity_${index}`]}</p>
                         )}
                         {product && product.unit === 'KG' && (
-                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">El peso será ingresado por Logística</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Peso (kg) se ingresa al preparar/facturar</p>
                         )}
                       </div>
                       
@@ -380,7 +461,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-blue-600 shadow-md shadow-blue-500/20 transition-all active:scale-95"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20 transition-all active:scale-95"
           >
             Crear Pedido
           </button>

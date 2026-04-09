@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { OrderStatus } from '../types';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../hooks/useAuth';
+import {
+  getStatusColorsForModalOption,
+  getStatusColorsForBadge,
+} from '../config/businessRules';
 
 interface ChangeStatusModalProps {
   isOpen: boolean;
@@ -51,44 +55,7 @@ const ChangeStatusModal: React.FC<ChangeStatusModalProps> = ({
 
   if (!isOpen) return null;
 
-  const getStatusLabel = (status: OrderStatus): string => {
-    return status;
-  };
-
-  const getStatusColorClasses = (status: OrderStatus, isSelected: boolean = false) => {
-    switch (status) {
-      case OrderStatus.PENDIENTE_ARMADO:
-        return {
-          border: isSelected ? 'border-orange-500' : 'border-slate-200 dark:border-slate-700',
-          bg: isSelected ? 'bg-orange-50 dark:bg-orange-900/20' : '',
-          dot: 'bg-orange-500',
-        };
-      case OrderStatus.PENDIENTE_FACTURACION:
-        return {
-          border: isSelected ? 'border-blue-500' : 'border-slate-200 dark:border-slate-700',
-          bg: isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : '',
-          dot: 'bg-blue-500',
-        };
-      case OrderStatus.FACTURADO:
-        return {
-          border: isSelected ? 'border-emerald-500' : 'border-slate-200 dark:border-slate-700',
-          bg: isSelected ? 'bg-emerald-50 dark:bg-emerald-900/20' : '',
-          dot: 'bg-emerald-500',
-        };
-      case OrderStatus.ENTREGADO:
-        return {
-          border: isSelected ? 'border-teal-500' : 'border-slate-200 dark:border-slate-700',
-          bg: isSelected ? 'bg-teal-50 dark:bg-teal-900/20' : '',
-          dot: 'bg-teal-500',
-        };
-      default:
-        return {
-          border: isSelected ? 'border-slate-500' : 'border-slate-200 dark:border-slate-700',
-          bg: isSelected ? 'bg-slate-50 dark:bg-slate-900/20' : '',
-          dot: 'bg-slate-500',
-        };
-    }
-  };
+  const getStatusLabel = (status: OrderStatus): string => status;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-[2px] p-4">
@@ -115,20 +82,17 @@ const ChangeStatusModal: React.FC<ChangeStatusModalProps> = ({
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
               Estado Actual
             </label>
-            <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg ${
-              currentStatus === OrderStatus.PENDIENTE_ARMADO ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300' :
-              currentStatus === OrderStatus.PENDIENTE_FACTURACION ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' :
-              currentStatus === OrderStatus.FACTURADO ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' :
-              'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300'
-            }`}>
-              <span className={`h-2 w-2 rounded-full ${
-                currentStatus === OrderStatus.PENDIENTE_ARMADO ? 'bg-orange-500' :
-                currentStatus === OrderStatus.PENDIENTE_FACTURACION ? 'bg-blue-500' :
-                currentStatus === OrderStatus.FACTURADO ? 'bg-emerald-500' :
-                'bg-teal-500'
-              }`}></span>
-              <span className="font-medium">{getStatusLabel(currentStatus)}</span>
-            </div>
+            {(() => {
+              const colors = getStatusColorsForBadge(currentStatus);
+              return (
+                <div
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg ${colors.bg} ${colors.text}`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${colors.dot}`}></span>
+                  <span className="font-medium">{getStatusLabel(currentStatus)}</span>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="mb-6">
@@ -145,7 +109,7 @@ const ChangeStatusModal: React.FC<ChangeStatusModalProps> = ({
               <div className="space-y-2">
                 {availableTransitions.map((status) => {
                   const isSelected = selectedStatus === status;
-                  const colors = getStatusColorClasses(status, isSelected);
+                  const colors = getStatusColorsForModalOption(status, isSelected);
                   return (
                     <button
                       key={status}
@@ -203,7 +167,7 @@ const ChangeStatusModal: React.FC<ChangeStatusModalProps> = ({
             <button
               type="submit"
               disabled={availableTransitions.length === 0 || !selectedStatus}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-blue-600 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cambiar Estado
             </button>

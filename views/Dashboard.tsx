@@ -1,20 +1,92 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/OrdersContext';
 import { usePermissions } from '../hooks/usePermissions';
-import { OrderStatus } from '../types.ts';
+import { OrderStatus, Order } from '../types.ts';
 import NewOrderModal from '../components/NewOrderModal';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { orders, hasUnweighedKGProducts } = useOrders();
   const { canCreateOrder } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const stats = [
-    { title: 'Pendiente de Armado', value: 12, label: 'Pedidos en cola', icon: 'package_2', color: 'orange' },
-    { title: 'Pendiente Facturación', value: 5, label: 'Requieren atención', icon: 'description', color: 'blue' },
-    { title: 'Facturados', value: 28, label: '+12% vs ayer', icon: 'check_circle', color: 'emerald', trending: true },
-    { title: 'Entregados', value: 38, label: 'Completados hoy', icon: 'local_shipping', color: 'teal', trending: true },
-  ];
+  const [contextMenuOrder, setContextMenuOrder] = useState<{ order: Order; x: number; y: number } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  // Calcular estadísticas dinámicamente basadas en todos los pedidos
+  const stats = useMemo(() => [
+    { 
+      title: 'Pendiente de Armado', 
+      value: orders.filter(o => o.status === OrderStatus.PENDIENTE_ARMADO).length,
+      label: 'Pedidos en cola', 
+      icon: 'package_2', 
+      color: 'orange' 
+    },
+    { 
+      title: 'Pendiente Facturación', 
+      value: orders.filter(o => o.status === OrderStatus.PENDIENTE_FACTURACION).length,
+      label: 'Requieren atención', 
+      icon: 'description', 
+      color: 'blue' 
+    },
+    { 
+      title: 'Facturados', 
+      value: orders.filter(o => o.status === OrderStatus.FACTURADO).length,
+      label: 'Completados', 
+      icon: 'check_circle', 
+      color: 'emerald', 
+      trending: true 
+    },
+    { 
+      title: 'Entregados', 
+      value: orders.filter(o => o.status === OrderStatus.ENTREGADO).length,
+      label: 'Completados', 
+      icon: 'local_shipping', 
+      color: 'teal', 
+      trending: true 
+    },
+  ], [orders]);
+
+  const handleContextMenu = (e: React.MouseEvent, order: Order) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenuOrder({
+      order,
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
+
+  const handleMenuAction = (action: 'view' | 'edit' | 'delete', order: Order) => {
+    setContextMenuOrder(null);
+    
+    if (action === 'view') {
+      const id = order.id.replace('#', '');
+      navigate(`/pedidos/${id}`);
+    } else if (action === 'edit') {
+      // Navegar a la página de pedidos con el pedido seleccionado
+      navigate('/pedidos');
+      // Aquí se podría pasar el ID como estado o query param para abrir el modal de edición
+    } else if (action === 'delete') {
+      if (window.confirm(`¿Estás seguro de que deseas eliminar el pedido ${order.id}?\n\nCliente: ${order.client}\nEsta acción no se puede deshacer.`)) {
+        // La eliminación se manejaría desde Orders.tsx
+        navigate('/pedidos');
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+        setContextMenuOrder(null);
+      }
+    };
+
+    if (contextMenuOrder) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [contextMenuOrder]);
 
   return (
     <div className="max-w-[1200px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
@@ -68,14 +140,17 @@ const Dashboard: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 text-sm">Gestiona los pedidos entrantes.</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 gap-2 text-sm font-bold shadow-sm transition-all">
+          <button
+            onClick={() => navigate('/pedidos')}
+            className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 gap-2 text-sm font-bold shadow-sm transition-all"
+          >
             <span className="material-symbols-outlined text-[20px]">visibility</span>
             <span className="whitespace-nowrap">Ver Pedidos del Día</span>
           </button>
           {canCreateOrder() && (
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white hover:bg-blue-600 gap-2 text-sm font-bold shadow-md shadow-blue-500/20 transition-all"
+              className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white hover:bg-primary-hover gap-2 text-sm font-bold shadow-md shadow-primary/20 transition-all"
             >
               <span className="material-symbols-outlined text-[20px] fill">add</span>
               <span className="whitespace-nowrap">Nuevo Pedido</span>
@@ -87,7 +162,12 @@ const Dashboard: React.FC = () => {
       <div className="flex flex-col bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h4 className="text-slate-900 dark:text-white font-bold text-lg">Últimos Movimientos</h4>
-          <button className="text-primary text-sm font-semibold hover:underline">Ver todo</button>
+          <button 
+            onClick={() => navigate('/pedidos')}
+            className="text-primary text-sm font-semibold hover:underline"
+          >
+            Ver todo
+          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
@@ -160,9 +240,47 @@ const Dashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button className="text-slate-400 hover:text-primary transition-colors">
-                      <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                    </button>
+                    <div className="relative">
+                      <button 
+                        onContextMenu={(e) => handleContextMenu(e, order)}
+                        className="text-slate-400 hover:text-primary transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                      </button>
+                      {contextMenuOrder && contextMenuOrder.order.id === order.id && (
+                        <div
+                          ref={contextMenuRef}
+                          className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50"
+                          style={{
+                            top: '100%',
+                            left: contextMenuOrder.x < window.innerWidth / 2 ? '0' : 'auto',
+                            right: contextMenuOrder.x >= window.innerWidth / 2 ? '0' : 'auto',
+                          }}
+                        >
+                          <button
+                            onClick={() => handleMenuAction('view', order)}
+                            className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">visibility</span>
+                            Ver detalles
+                          </button>
+                          <button
+                            onClick={() => handleMenuAction('edit', order)}
+                            className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleMenuAction('delete', order)}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -7,14 +7,14 @@ export const INITIAL_ORDERS: Order[] = [
     client: 'Distribuidora Central', 
     rut: '76.444.333-1', 
     date: '24/10/2023', 
-    items: 7, // 5 manzanas + 2 bananos = 7 items
+    items: 7,
     total: 28.00, 
     status: OrderStatus.PENDIENTE_FACTURACION,
-    estimatedTotal: 25.00, // Solo productos Unidad: 2 × $12.50 = $25.00
-    actualTotal: 28.00, // Productos Unidad + productos KG: 25.00 + (2.5 × 1.20) = 25.00 + 3.00 = 28.00
+    estimatedTotal: 5.00, // Solo productos Unidad: 2 × $2.50 = $5.00
+    actualTotal: 28.00, // Productos Unidad + productos KG: 5.00 + (2.5 × 8.50) = 5.00 + 21.25 = 26.25
     orderItems: [
-      { productId: 'PD-1001', estimatedQuantity: 5, actualWeight: 2.5, price: 1.20, unit: 'KG' }, // 5 manzanas pesan 2.5 KG
-      { productId: 'PD-1002', estimatedQuantity: 2, price: 12.50, unit: 'Unidad' },
+      { productId: 'PD-1001', estimatedQuantity: 3, actualWeight: 2.5, price: 8.50, unit: 'KG' }, // Queso Cremoso
+      { productId: 'PD-1004', estimatedQuantity: 2, price: 2.50, unit: 'Unidad' }, // Leche Entera
     ]
   },
   { 
@@ -22,13 +22,13 @@ export const INITIAL_ORDERS: Order[] = [
     client: 'Supermercado El Sol', 
     rut: '98.123.456-K', 
     date: '24/10/2023', 
-    items: 6, // 3 aguacates + 3 piñas = 6 items
-    total: 6.00, // Total parcial: solo productos Unidad
+    items: 6,
+    total: 6.00,
     status: OrderStatus.PENDIENTE_ARMADO,
-    estimatedTotal: 6.00, // Solo productos Unidad: 3 × $2.00 = $6.00
+    estimatedTotal: 6.00, // Solo productos Unidad: 3 × $2.50 = $7.50
     orderItems: [
-      { productId: 'PD-1003', estimatedQuantity: 3, price: 4.80, unit: 'KG' }, // 3 aguacates sin pesar
-      { productId: 'PD-1004', estimatedQuantity: 3, price: 2.00, unit: 'Unidad' },
+      { productId: 'PD-1002', estimatedQuantity: 2, price: 12.00, unit: 'KG' }, // Queso Dambo sin pesar
+      { productId: 'PD-1004', estimatedQuantity: 3, price: 2.50, unit: 'Unidad' }, // Leche Entera
     ]
   },
   { 
@@ -36,13 +36,13 @@ export const INITIAL_ORDERS: Order[] = [
     client: 'Tienda Los Hermanos', 
     rut: '12.345.678-9', 
     date: '24/10/2023', 
-    items: 12, // 2 sacos = 2 items
+    items: 2,
     total: 30.00, 
     status: OrderStatus.FACTURADO,
-    estimatedTotal: 30.00, // Solo productos Unidad: 2 × $15.00 = $30.00
-    actualTotal: 30.00, // No hay productos KG, total real = estimado
+    estimatedTotal: 30.00,
+    actualTotal: 30.00,
     orderItems: [
-      { productId: 'PD-1005', estimatedQuantity: 2, price: 15.00, unit: 'Unidad' },
+      { productId: 'PD-1012', estimatedQuantity: 2, price: 15.00, unit: 'KG' }, // Jamón Cocido
     ]
   },
   { 
@@ -50,13 +50,13 @@ export const INITIAL_ORDERS: Order[] = [
     client: 'Mini Market Apolo', 
     rut: '14.555.222-3', 
     date: '24/10/2023', 
-    items: 8, // 3 manzanas + 5 piñas = 8 items
-    total: 10.00, // Total parcial: solo productos Unidad
+    items: 8,
+    total: 10.00,
     status: OrderStatus.PENDIENTE_ARMADO,
-    estimatedTotal: 10.00, // Solo productos Unidad: 5 × $2.00 = $10.00
+    estimatedTotal: 10.00,
     orderItems: [
-      { productId: 'PD-1001', estimatedQuantity: 3, price: 1.20, unit: 'KG' }, // 3 manzanas sin pesar
-      { productId: 'PD-1004', estimatedQuantity: 5, price: 2.00, unit: 'Unidad' },
+      { productId: 'PD-1007', estimatedQuantity: 3, price: 1.50, unit: 'KG' }, // Harina 000 sin pesar
+      { productId: 'PD-1004', estimatedQuantity: 5, price: 2.50, unit: 'Unidad' }, // Leche Entera
     ]
   },
   { 
@@ -64,44 +64,63 @@ export const INITIAL_ORDERS: Order[] = [
     client: 'Bodega San Juan', 
     rut: '18.999.000-1', 
     date: '24/10/2023', 
-    items: 3, // 1 aguacate + 2 bananos = 3 items
+    items: 3,
     total: 30.28, 
     status: OrderStatus.FACTURADO,
-    estimatedTotal: 25.00, // Solo productos Unidad: 2 × $12.50 = $25.00
-    actualTotal: 30.28, // Productos Unidad + productos KG: 25.00 + (1.1 × 4.80) = 25.00 + 5.28 = 30.28
+    estimatedTotal: 5.00,
+    actualTotal: 30.28,
     orderItems: [
-      { productId: 'PD-1003', estimatedQuantity: 1, actualWeight: 1.1, price: 4.80, unit: 'KG' }, // 1 aguacate pesa 1.1 KG
-      { productId: 'PD-1002', estimatedQuantity: 2, price: 12.50, unit: 'Unidad' },
+      { productId: 'PD-1012', estimatedQuantity: 1, actualWeight: 1.1, price: 15.00, unit: 'KG' }, // Jamón Cocido
+      { productId: 'PD-1004', estimatedQuantity: 2, price: 2.50, unit: 'Unidad' }, // Leche Entera
     ]
   },
 ];
 
 export const INITIAL_PRODUCTS: Product[] = [
-  { id: 'PD-1001', name: 'Manzanas Royal Gala', emoji: '🍎', price: 1.20, unit: 'KG' },
-  { id: 'PD-1002', name: 'Caja de Banano Premium', emoji: '🍌', price: 12.50, unit: 'Unidad' },
-  { id: 'PD-1003', name: 'Aguacate Hass', emoji: '🥑', price: 4.80, unit: 'KG' },
-  { id: 'PD-1004', name: 'Piña Golden', emoji: '🍍', price: 2.00, unit: 'Unidad' },
-  { id: 'PD-1005', name: 'Saco de Papas (25kg)', emoji: '🥔', price: 15.00, unit: 'Unidad' },
-  { id: 'PD-1006', name: 'Naranjas de Ombligo', emoji: '🍊', price: 0.95, unit: 'KG' },
-  { id: 'PD-1007', name: 'Limón Premium', emoji: '🍋', price: 1.10, unit: 'KG' },
-  { id: 'PD-1008', name: 'Uva Negra', emoji: '🍇', price: 3.50, unit: 'KG' },
-  { id: 'PD-1009', name: 'Sandía Baby', emoji: '🍉', price: 4.20, unit: 'Unidad' },
-  { id: 'PD-1010', name: 'Melón Escrito', emoji: '🍈', price: 3.80, unit: 'Unidad' },
-  { id: 'PD-1011', name: 'Pera Williams', emoji: '🍐', price: 1.45, unit: 'KG' },
-  { id: 'PD-1012', name: 'Durazno Amarillo', emoji: '🍑', price: 2.30, unit: 'KG' },
-  { id: 'PD-1013', name: 'Cereza Roja', emoji: '🍒', price: 8.50, unit: 'KG' },
-  { id: 'PD-1014', name: 'Frutilla Seleccionada', emoji: '🍓', price: 5.40, unit: 'KG' },
-  { id: 'PD-1015', name: 'Kiwi Importado', emoji: '🥝', price: 4.10, unit: 'KG' },
-  { id: 'PD-1016', name: 'Tomate Redondo', emoji: '🍅', price: 1.25, unit: 'KG' },
-  { id: 'PD-1017', name: 'Zanahoria Lavada', emoji: '🥕', price: 0.75, unit: 'KG' },
-  { id: 'PD-1018', name: 'Choclo Dulce', emoji: '🌽', price: 0.90, unit: 'Unidad' },
-  { id: 'PD-1019', name: 'Pimiento Rojo', emoji: '🫑', price: 3.20, unit: 'KG' },
-  { id: 'PD-1020', name: 'Cebolla Morada', emoji: '🧅', price: 0.85, unit: 'KG' },
-  { id: 'PD-1021', name: 'Ajo Morado (Malla)', emoji: '🧄', price: 1.50, unit: 'Unidad' },
-  { id: 'PD-1022', name: 'Brócoli Fresco', emoji: '🥦', price: 2.10, unit: 'Unidad' },
-  { id: 'PD-1023', name: 'Lechuga Capuchina', emoji: '🥬', price: 1.80, unit: 'Unidad' },
-  { id: 'PD-1024', name: 'Berenjena Grande', emoji: '🍆', price: 1.60, unit: 'KG' },
-  { id: 'PD-1025', name: 'Palta Hass Extra', emoji: '🥑', price: 12.00, unit: 'KG' },
+  // Lácteos y Quesos
+  { id: 'PD-1001', name: 'Queso Cremoso', brand: 'La Serenísima', category: 'Lácteos y Quesos', price: 8.50, unit: 'KG' },
+  { id: 'PD-1002', name: 'Queso Dambo', brand: 'La Serenísima', category: 'Lácteos y Quesos', price: 12.00, unit: 'KG' },
+  { id: 'PD-1003', name: 'Queso Tybo', brand: 'Verónica', category: 'Lácteos y Quesos', price: 10.50, unit: 'KG' },
+  { id: 'PD-1004', name: 'Leche Entera', brand: 'La Serenísima', category: 'Lácteos y Quesos', price: 2.50, unit: 'Unidad' },
+  { id: 'PD-1005', name: 'Yogur Natural', brand: 'La Serenísima', category: 'Lácteos y Quesos', price: 1.80, unit: 'Unidad' },
+  { id: 'PD-1006', name: 'Manteca', brand: 'La Serenísima', category: 'Lácteos y Quesos', price: 3.20, unit: 'Unidad' },
+  
+  // Harinas
+  { id: 'PD-1007', name: 'Harina 000', brand: 'Cañuelas', category: 'Harinas', price: 1.50, unit: 'KG' },
+  { id: 'PD-1008', name: 'Harina 0000', brand: 'Cañuelas', category: 'Harinas', price: 1.60, unit: 'KG' },
+  { id: 'PD-1009', name: 'Harina Integral', brand: 'Cañuelas', category: 'Harinas', price: 2.10, unit: 'KG' },
+  { id: 'PD-1010', name: 'Harina de Maíz', brand: 'Morixe', category: 'Harinas', price: 1.80, unit: 'KG' },
+  { id: 'PD-1011', name: 'Premezcla para Pizza', brand: 'Cañuelas', category: 'Harinas', price: 3.50, unit: 'KG' },
+  
+  // Fiambres
+  { id: 'PD-1012', name: 'Jamón Cocido', brand: 'Paladini', category: 'Fiambres', price: 15.00, unit: 'KG' },
+  { id: 'PD-1013', name: 'Salame Tipo Milán', brand: 'Paladini', category: 'Fiambres', price: 18.50, unit: 'KG' },
+  { id: 'PD-1014', name: 'Mortadela', brand: 'Paladini', category: 'Fiambres', price: 12.00, unit: 'KG' },
+  { id: 'PD-1015', name: 'Panceta Ahumada', brand: 'Swift', category: 'Fiambres', price: 20.00, unit: 'KG' },
+  { id: 'PD-1016', name: 'Queso Cremoso', brand: 'Cremoso', category: 'Fiambres', price: 8.50, unit: 'KG' },
+];
+
+export const INITIAL_CATEGORIES: string[] = [
+  'Lácteos y Quesos',
+  'Harinas',
+  'Fiambres',
+  'Bebidas',
+  'Carnes',
+  'Frutas y Verduras',
+  'Panadería',
+  'Congelados',
+  'Limpieza',
+  'Otros',
+];
+
+export const INITIAL_BRANDS: string[] = [
+  'La Serenísima',
+  'Verónica',
+  'Cañuelas',
+  'Morixe',
+  'Paladini',
+  'Swift',
+  'Cremoso',
 ];
 
 export const INITIAL_CLIENTS: Client[] = [

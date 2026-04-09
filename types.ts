@@ -12,6 +12,12 @@ export interface OrderItem {
   actualWeight?: number; // Peso real en KG, solo para productos por KG, opcional
   price: number; // Precio unitario
   unit: 'KG' | 'Unidad'; // Para saber si requiere peso real
+  /** Marcado por logística cuando el artículo está listo/completado */
+  completed?: boolean;
+  /** Marcado por Facturación cuando el artículo está facturado/completado */
+  billedByFacturacion?: boolean;
+  /** Marcado por Admin cuando comprueba que logística agregó lo facturado */
+  verifiedByAdmin?: boolean;
 }
 
 export interface Order {
@@ -25,12 +31,15 @@ export interface Order {
   orderItems: OrderItem[]; // Lista detallada de items
   estimatedTotal: number; // Total estimado inicial
   actualTotal?: number; // Total real después de ingresar pesos, opcional
+  /** Observaciones específicas del pedido */
+  notes?: string;
 }
 
 export interface Product {
   id: string;
   name: string;
-  emoji: string;
+  brand: string;
+  category: string;
   price: number;
   unit: 'KG' | 'Unidad';
 }

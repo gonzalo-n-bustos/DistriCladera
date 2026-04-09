@@ -1,0 +1,251 @@
+---
+description: "Proceso de razonamiento metacognitivo para la resolución de problemas y toma de decisiones"
+globs: "**/*"
+alwaysApply: true
+---
+
+# Razonamiento Metacognitivo
+
+> **OBJETIVO**: Mejorar la calidad de respuestas y decisiones mediante un proceso estructurado de razonamiento que incluye descomposición, evaluación de confianza, verificación y reflexión.
+
+## Cuándo Aplicar
+
+- **Problemas complejos**: Usar el proceso completo (DESCOMPONER → RESOLVER → VERIFICAR → SINTETIZAR → REFLEXIONAR)
+- **Preguntas simples**: Saltar directamente a la respuesta clara y concisa
+- **Decisiones críticas**: Siempre usar el proceso completo (selección de stack, arquitectura, evaluaciones de viabilidad)
+
+---
+
+## Proceso para Problemas Complejos
+
+### 1. DESCOMPONER
+
+Divide el problema en subproblemas manejables:
+
+- **Identifica componentes principales**: ¿Qué partes tiene este problema?
+- **Separa dependencias**: ¿Qué depende de qué?
+- **Define orden de resolución**: ¿En qué orden debo abordar cada parte?
+- **Establece criterios de éxito**: ¿Cómo sé que cada parte está resuelta?
+
+**Ejemplo**:
+```
+Problema: "Seleccionar stack tecnológico para landing page"
+Subproblemas:
+  1. Evaluar requisitos de frontend
+  2. Evaluar necesidades de backend (si aplica)
+  3. Considerar requisitos de performance
+  4. Evaluar costos y complejidad
+  5. Considerar mantenibilidad
+```
+
+### 2. RESOLVER
+
+Aborda cada subproblema con **confianza explícita (0.0-1.0)**:
+
+- **Indica tu nivel de confianza** para cada solución/decisión
+- **Documenta supuestos** que estás haciendo
+- **Identifica incertidumbres** y qué información falta
+- **Justifica tu razonamiento** con evidencia o lógica
+
+**Formato**:
+```
+Subproblema 1: [Descripción]
+- Solución: [Tu propuesta]
+- Confianza: 0.85
+- Supuestos: [Lista de supuestos]
+- Incertidumbres: [Qué no estás seguro]
+- Justificación: [Por qué esta solución]
+```
+
+**Escala de Confianza**:
+- **0.9-1.0**: Muy alta confianza, información completa, solución probada
+- **0.7-0.89**: Alta confianza, información suficiente, solución razonable
+- **0.5-0.69**: Confianza media, algunas incertidumbres, necesita validación
+- **0.3-0.49**: Baja confianza, muchas incertidumbres, requiere más investigación
+- **0.0-0.29**: Muy baja confianza, información insuficiente, no proceder
+
+### 3. VERIFICAR
+
+Antes de entregar, revisa sistemáticamente:
+
+#### ✅ Lógica
+- ¿El razonamiento es correcto?
+- ¿Hay errores en la cadena de pensamiento?
+- ¿Las conclusiones siguen de las premisas?
+
+#### ✅ Hechos
+- ¿La información es precisa y actualizada?
+- ¿Las fuentes son confiables?
+- ¿Hay datos contradictorios?
+
+#### ✅ Completitud
+- ¿Falta algo importante?
+- ¿Se consideraron todas las alternativas relevantes?
+- ¿Se cubrieron todos los requisitos?
+
+#### ✅ Sesgos
+- ¿Hay suposiciones no validadas?
+- ¿Estoy favoreciendo una solución por preferencia personal?
+- ¿Consideré puntos de vista alternativos?
+
+**Checklist de Verificación**:
+```
+□ Lógica verificada
+□ Hechos confirmados
+□ Completitud asegurada
+□ Sesgos identificados y mitigados
+```
+
+### 4. SINTETIZAR
+
+Combina los resultados usando confianza ponderada:
+
+- **Integra soluciones** de todos los subproblemas
+- **Calcula confianza general** considerando confianzas individuales
+- **Identifica puntos débiles** en la solución final
+- **Documenta trade-offs** y compensaciones
+
+**Fórmula de Confianza General**:
+```
+Confianza General = (Σ confianza_subproblema × peso) / Σ pesos
+
+Donde el peso refleja la importancia del subproblema
+```
+
+**Ejemplo**:
+```
+Solución Final: Stack React + Node.js + PostgreSQL
+Confianza General: 0.87
+
+Desglose:
+- Frontend (peso 30%): 0.90 → 0.27
+- Backend (peso 30%): 0.85 → 0.255
+- Performance (peso 25%): 0.88 → 0.22
+- Mantenibilidad (peso 15%): 0.83 → 0.125
+
+Puntos débiles identificados:
+- Backend tiene confianza 0.85 (aceptable pero no óptima)
+- Necesita validación con requisitos específicos
+```
+
+### 5. REFLEXIONAR
+
+Si la confianza general < 0.8, o si algún subproblema crítico < 0.7:
+
+1. **Identifica debilidades específicas**: ¿Qué parte tiene baja confianza y por qué?
+2. **Busca información adicional**: ¿Qué datos o contexto faltan?
+3. **Considera alternativas**: ¿Hay otras soluciones que aumenten la confianza?
+4. **Vuelve a intentar**: Repite el proceso con más información o enfoque diferente
+
+**Si confianza ≥ 0.8**:
+- Procede con la solución
+- Documenta advertencias clave
+- Sugiere validación en implementación
+
+**Si confianza < 0.8**:
+- ⚠️ **ADVERTENCIA**: Confianza baja, requiere más investigación
+- Lista qué información adicional necesitas
+- Propón pasos para aumentar confianza
+- Considera consultar con el usuario antes de proceder
+
+---
+
+## Para Preguntas Simples
+
+Cuando el problema es directo y no requiere descomposición:
+
+- **Salta directamente** a la respuesta clara y concisa
+- **Indica confianza** brevemente si es relevante
+- **No sobre-ingeniería** el proceso
+
+**Ejemplo**:
+```
+Pregunta: "¿Qué es un componente React?"
+Respuesta: [Explicación directa]
+Confianza: 0.95 (concepto bien establecido)
+```
+
+---
+
+## Formato de Entrega
+
+Siempre incluye al final de tu respuesta:
+
+### ✅ Respuesta Clara
+- Solución o respuesta principal
+- Explicación concisa
+- Pasos o recomendaciones
+
+### 📊 Nivel de Confianza
+- **Confianza General**: X.XX (0.0-1.0)
+- **Desglose** (si aplica): Confianza por componente
+- **Justificación**: Por qué este nivel de confianza
+
+### ⚠️ Advertencias Clave
+- Limitaciones de la solución
+- Supuestos importantes
+- Riesgos identificados
+- Información faltante (si aplica)
+
+**Ejemplo de Formato**:
+```markdown
+## Solución Propuesta
+[Tu respuesta/solución aquí]
+
+## Nivel de Confianza
+**Confianza General**: 0.87
+
+**Desglose**:
+- Componente A: 0.90
+- Componente B: 0.85
+- Componente C: 0.83
+
+**Justificación**: Alta confianza basada en [razones]
+
+## Advertencias Clave
+⚠️ **Supuesto importante**: [Supuesto que estás haciendo]
+⚠️ **Limitación**: [Limitación conocida]
+⚠️ **Recomendación**: [Qué validar antes de implementar]
+```
+
+---
+
+## Integración con Agentes del Equipo
+
+### Product Owner
+- **DESCOMPONER**: Requisitos de negocio, impacto, priorización
+- **Confianza en especificación**: Debe ser ≥ 0.8 antes de pasar a Design
+
+### Designer
+- **DESCOMPONER**: UX, UI, accesibilidad, responsive
+- **Confianza en prototipo**: Debe validar con usuario si < 0.8
+
+### Architect
+- **DESCOMPONER**: Stack, arquitectura, escalabilidad, seguridad
+- **Confianza en decisiones técnicas**: Crítico, debe ser ≥ 0.85 o justificar riesgos
+
+### Developer
+- **DESCOMPONER**: Implementación, tests, integración
+- **Confianza en código**: Debe ser alta (≥ 0.85) antes de handoff a QA
+
+### QA Engineer
+- **DESCOMPONER**: Estrategia de testing, casos de prueba, cobertura
+- **Confianza en calidad**: Debe ser ≥ 0.9 para certificar release
+
+### DevOps
+- **DESCOMPONER**: Infraestructura, CI/CD, seguridad, monitoreo
+- **Confianza en deploy**: Debe ser ≥ 0.9 para producción
+
+---
+
+## Mejora Continua
+
+Después de aplicar este proceso, reflexiona:
+
+- ¿El proceso mejoró la calidad de la respuesta?
+- ¿Identificaste riesgos que de otra forma habrías pasado por alto?
+- ¿La confianza refleja adecuadamente la incertidumbre real?
+
+---
+
+**RECUERDA**: Este proceso no debe hacer las respuestas más lentas innecesariamente. Úsalo para problemas complejos y decisiones importantes, pero sé pragmático con preguntas simples.
